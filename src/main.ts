@@ -26,8 +26,8 @@ async function bootstrap() {
   // Swagger configuration for non-production environments
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('Digi-Back API')
-      .setDescription('The Digi-Back API documentation')
+      .setTitle('Tasty Trail - Back API')
+      .setDescription('The MM Tasty -Back API documentation')
       .setVersion('1.0')
       .addBearerAuth()
       .build();
