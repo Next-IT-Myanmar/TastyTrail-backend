@@ -14,26 +14,30 @@ async function bootstrap() {
     prefix: '/uploads',
   });
 
-  // Enable CORS with specific options
+  // Enable CORS with environment-specific options
   app.enableCors({
-    origin: 'http://localhost:3000', // Replace with your frontend URL
-    credentials: true,               // Allow credentials like cookies
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed methods
+    origin: process.env.FRONTEND_URL || '*',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   });
 
   app.useGlobalPipes(new ValidationPipe());
 
-  // Swagger configuration
-  const config = new DocumentBuilder()
-    .setTitle('Digi-Back API')
-    .setDescription('The Digi-Back API documentation')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  // Swagger configuration for non-production environments
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Digi-Back API')
+      .setDescription('The Digi-Back API documentation')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
+  }
 
-  await app.listen(3001);
+  // Use environment port or default to 3001
+  const port = process.env.PORT || 3001;
+  await app.listen(port);
 }
 bootstrap();

@@ -19,9 +19,11 @@
     "typeorm": "^0.3.21"
   },
   "scripts": {
-    "start": "nest start",
+    "build": "nest build",
+    "start": "node dist/main",
     "start:dev": "nest start --watch",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "npm run build"
   },
   "devDependencies": {
     "@nestjs/testing": "^11.0.13",
