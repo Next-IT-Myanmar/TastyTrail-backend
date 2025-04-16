@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { Restaurant } from '../../restaurants/entities/restaurant.entity';
 
 @Entity()
 export class Category {
@@ -44,4 +45,11 @@ export class Category {
   })
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
+
+  @ApiProperty({
+    description: 'Restaurants associated with this category',
+    type: () => [Restaurant]
+  })
+  @ManyToMany(() => Restaurant, restaurant => restaurant.categories)
+  restaurants: Restaurant[];
 }

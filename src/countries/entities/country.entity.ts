@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { Restaurant } from '../../restaurants/entities/restaurant.entity';
 
 @Entity('countries')
 export class Country {
@@ -26,4 +27,11 @@ export class Country {
   @ApiProperty({ description: 'Last update timestamp of the country' })
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @ApiProperty({
+    description: 'Restaurants associated with this country',
+    type: () => [Restaurant]
+  })
+  @ManyToMany(() => Restaurant, restaurant => restaurant.countries)
+  restaurants: Restaurant[];
 }
