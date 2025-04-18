@@ -37,8 +37,8 @@ async function bootstrap() {
   // Swagger configuration for non-production environments
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('Tasty Trail - Back API Documentation')    
-      .setDescription('The MM Tasty -Back API')
+      .setTitle('Tasty Trail - API Documentation')    
+      .setDescription('The MM Tasty -> prepared by NIM.')
       .setVersion('1.0')
       .addBearerAuth()
       .build();
@@ -50,7 +50,14 @@ async function bootstrap() {
         * {
           font-family: 'Poppins', sans-serif !important;
         }
-          
+          .topbar{
+          display: none;
+          }
+          .info{
+              background: #FFEB3B;
+              padding: 27px;
+              border-radius: 14px;
+          }
       `,
     });
   }

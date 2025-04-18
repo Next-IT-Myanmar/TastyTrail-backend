@@ -23,13 +23,13 @@ export class CategoriesService extends BaseService<Category> {
     const category = this.categoryRepository.create(categoryData);
     
     if (imageFile) {
-      const uploadDir = 'uploads\\categories';
+      const uploadDir = 'uploads/categories';
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
 
       const uniqueFileName = `${Date.now()}-${imageFile.originalname}`;
-      const filePath = `${uploadDir}\\${uniqueFileName}`;
+      const filePath = `${uploadDir}/${uniqueFileName}`;
       fs.writeFileSync(filePath, imageFile.buffer);
       category.img = filePath;
     }
@@ -59,13 +59,13 @@ export class CategoriesService extends BaseService<Category> {
         fs.unlinkSync(category.img);
       }
 
-      const uploadDir = 'uploads\\categories';
+      const uploadDir = 'uploads/categories';
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
 
       const uniqueFileName = `${Date.now()}-${imageFile.originalname}`;
-      const filePath = `${uploadDir}\\${uniqueFileName}`;
+      const filePath = `${uploadDir}/${uniqueFileName}`;
       fs.writeFileSync(filePath, imageFile.buffer);
       category.img = filePath;
     }
