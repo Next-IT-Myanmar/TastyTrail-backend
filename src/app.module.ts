@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
 import { RestaurantsModule } from './restaurants/restaurants.module';
 import { SlidersModule } from './sliders/sliders.module';
+import { CurrencyModule } from './currency/currency.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { SlidersModule } from './sliders/sliders.module';
     CategoriesModule,
     RestaurantsModule,
     SlidersModule,
+    CurrencyModule,
   ],
 })
 export class AppModule {}
