@@ -83,6 +83,43 @@ export class RestaurantsService {
     });
   }
 
+  // Get restaurants by category IDs
+  async findByCategories(categoryIds: number[]) {
+    if (!categoryIds || categoryIds.length === 0) {
+      return this.findAll();
+    }
+
+    // Convert categoryIds to numbers if they're not already
+    const parsedCategoryIds = this.convertCategoryIds(categoryIds);
+    
+    // Find restaurants that have any of the specified categories
+    const restaurants = await this.restaurantRepository
+      .createQueryBuilder('restaurant')
+      .leftJoinAndSelect('restaurant.categories', 'category')
+      .leftJoinAndSelect('restaurant.countries', 'country')
+      .where('category.id IN (:...categoryIds)', { categoryIds: parsedCategoryIds })
+      .getMany();
+
+    return restaurants;
+  }
+
+  // Get restaurants by country IDs
+  async findByCountries(countryIds: string[]) {
+    if (!countryIds || countryIds.length === 0) {
+      return this.findAll();
+    }
+    
+    // Find restaurants that have any of the specified countries
+    const restaurants = await this.restaurantRepository
+      .createQueryBuilder('restaurant')
+      .leftJoinAndSelect('restaurant.categories', 'category')
+      .leftJoinAndSelect('restaurant.countries', 'country')
+      .where('country.id IN (:...countryIds)', { countryIds })
+      .getMany();
+
+    return restaurants;
+  }
+
   // Get a specific restaurant by ID, including categories and countries
   async findOne(id: string) {
     const restaurant = await this.restaurantRepository.findOne({

@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseUUIDPipe, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RestaurantsService } from './restaurants.service';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
+import { FilterRestaurantDto } from './dto/filter-restaurant.dto';
+import { Restaurant } from './entities/restaurant.entity';
 
 @ApiTags('restaurants')
 @Controller('restaurants')
@@ -16,6 +18,10 @@ export class RestaurantsController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('img'))
   @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Create a new restaurant' })
+  @ApiResponse({ status: 201, description: 'Restaurant created successfully', type: Restaurant })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(
     @Body() createRestaurantDto: CreateRestaurantDto,
     @UploadedFile() file: Express.Multer.File,
@@ -29,8 +35,17 @@ export class RestaurantsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all restaurants' })
+  @ApiResponse({ status: 200, description: 'Return all restaurants', type: [Restaurant] })
   findAll() {
     return this.restaurantsService.findAll();
+  }
+  
+  @Get('by-category')
+  @ApiOperation({ summary: 'Get restaurants by category IDs' })
+  @ApiResponse({ status: 200, description: 'Return filtered restaurants', type: [Restaurant] })
+  findByCategory(@Query() filterDto: FilterRestaurantDto) {
+    return this.restaurantsService.findByCategories(filterDto.categoryIds || []);
   }
 
   @Get(':id')
@@ -48,8 +63,21 @@ export class RestaurantsController {
     @Body() updateRestaurantDto: UpdateRestaurantDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    if (typeof updateRestaurantDto.categoryIds === 'string') {
+      updateRestaurantDto.categoryIds = updateRestaurantDto.categoryIds
+        .split(',')
+        .map(id => parseInt(id.trim(), 10));
+    }
+  
+    if (typeof updateRestaurantDto.countryIds === 'string') {
+      updateRestaurantDto.countryIds = updateRestaurantDto.countryIds
+        .split(',')
+        .map(id => id.trim());
+    }
+  
     return this.restaurantsService.update(id, updateRestaurantDto, file);
   }
+  
 
   @Delete(':id')
   @ApiBearerAuth()
