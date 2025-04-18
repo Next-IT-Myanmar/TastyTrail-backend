@@ -44,7 +44,15 @@ async function bootstrap() {
       .build();
     
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
+    SwaggerModule.setup('api', app, document, {
+      customCssUrl: 'https://fonts.googleapis.com/css2?family=Poppins&display=swap',
+      customCss: `
+        * {
+          font-family: 'Poppins', sans-serif !important;
+        }
+          
+      `,
+    });
   }
 
   // Use environment port or default to 3001
