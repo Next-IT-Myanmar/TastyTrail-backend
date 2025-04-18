@@ -76,66 +76,97 @@ export class RestaurantsService {
   
   
 
-  // Get all restaurants with their associated categories and countries
-  async findAll() {
-    return this.restaurantRepository.find({
+  // Get all restaurants with their associated categories and countries with pagination
+  async findAll(page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+    
+    const [results, total] = await this.restaurantRepository.findAndCount({
       relations: ['categories', 'countries'],
+      skip,
+      take: limit,
+      order: { createdAt: 'DESC' }
     });
+
+    return {
+      results,
+      pagination: {
+        page,
+        limit,
+        total
+      }
+    };
   }
 
-  // Get restaurants by category IDs
-  async findByCategories(categoryIds: number[]) {
+  // Get restaurants by category IDs with pagination
+  async findByCategories(categoryIds: number[], page: number = 1, limit: number = 10) {
     if (!categoryIds || categoryIds.length === 0) {
-      return this.findAll();
+      return this.findAll(page, limit);
     }
 
-    // Convert categoryIds to numbers if they're not already
+    const skip = (page - 1) * limit;
     const parsedCategoryIds = this.convertCategoryIds(categoryIds);
     
-    // Find restaurants that have any of the specified categories
-    const restaurants = await this.restaurantRepository
+    const [results, total] = await this.restaurantRepository
       .createQueryBuilder('restaurant')
       .leftJoinAndSelect('restaurant.categories', 'category')
       .leftJoinAndSelect('restaurant.countries', 'country')
       .where('category.id IN (:...categoryIds)', { categoryIds: parsedCategoryIds })
-      .getMany();
+      .orderBy('restaurant.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
 
-    return restaurants;
+    return {
+      results,
+      pagination: {
+        page,
+        limit,
+        total
+      }
+    };
   }
 
-  // Get restaurants by country IDs
-  async findByCountries(countryIds: string[]) {
+  // Get restaurants by country IDs with pagination
+  async findByCountries(countryIds: string[], page: number = 1, limit: number = 10) {
     if (!countryIds || countryIds.length === 0) {
-      return this.findAll();
+      return this.findAll(page, limit);
     }
     
-    // Find restaurants that have any of the specified countries
-    const restaurants = await this.restaurantRepository
+    const skip = (page - 1) * limit;
+    const [results, total] = await this.restaurantRepository
       .createQueryBuilder('restaurant')
       .leftJoinAndSelect('restaurant.categories', 'category')
       .leftJoinAndSelect('restaurant.countries', 'country')
       .where('country.id IN (:...countryIds)', { countryIds })
-      .getMany();
+      .orderBy('restaurant.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
 
-    return restaurants;
+    return {
+      results,
+      pagination: {
+        page,
+        limit,
+        total
+      }
+    };
   }
 
-  // Get restaurants by both country and category IDs
-  async findByCountryAndCategory(countryIds: string[], categoryIds: number[]) {
+  // Get restaurants by both country and category IDs with pagination
+  async findByCountryAndCategory(countryIds: string[], categoryIds: number[], page: number = 1, limit: number = 10) {
     if ((!countryIds || countryIds.length === 0) && (!categoryIds || categoryIds.length === 0)) {
-      return this.findAll();
+      return this.findAll(page, limit);
     }
 
-    // Convert categoryIds to numbers if they're not already
+    const skip = (page - 1) * limit;
     const parsedCategoryIds = this.convertCategoryIds(categoryIds);
     
-    // Create query builder
     const queryBuilder = this.restaurantRepository
       .createQueryBuilder('restaurant')
       .leftJoinAndSelect('restaurant.categories', 'category')
       .leftJoinAndSelect('restaurant.countries', 'country');
 
-    // Add conditions based on provided filters
     if (countryIds && countryIds.length > 0) {
       queryBuilder.andWhere('country.id IN (:...countryIds)', { countryIds });
     }
@@ -144,7 +175,20 @@ export class RestaurantsService {
       queryBuilder.andWhere('category.id IN (:...categoryIds)', { categoryIds: parsedCategoryIds });
     }
 
-    return queryBuilder.getMany();
+    const [results, total] = await queryBuilder
+      .orderBy('restaurant.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      results,
+      pagination: {
+        page,
+        limit,
+        total
+      }
+    };
   }
 
   // Get a specific restaurant by ID, including categories and countries

@@ -4,15 +4,19 @@ import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { BaseService } from '../common/services/base.service';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
-export class CategoriesService {
+export class CategoriesService extends BaseService<Category> {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
-  ) {}
+  ) {
+    super(categoryRepository);
+  }
 
   async create(createCategoryDto: CreateCategoryDto, imageFile: Express.Multer.File) {
     const { img, ...categoryData } = createCategoryDto;
@@ -33,8 +37,9 @@ export class CategoriesService {
     return this.categoryRepository.save(category);
   }
 
-  findAll() {
-    return this.categoryRepository.find();
+  async findAll(paginationDto: PaginationDto) {
+    const queryBuilder = this.categoryRepository.createQueryBuilder('category');
+    return this.paginate(queryBuilder, paginationDto);
   }
 
   async findOne(id: number) {

@@ -4,15 +4,19 @@ import { Repository } from 'typeorm';
 import { Country } from './entities/country.entity';
 import { CreateCountryDto } from './dto/create-country.dto';
 import { UpdateCountryDto } from './dto/update-country.dto';
+import { BaseService } from '../common/services/base.service';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import * as fs from 'fs';
 import { unlink } from 'fs/promises';
 
 @Injectable()
-export class CountriesService {
+export class CountriesService extends BaseService<Country> {
   constructor(
     @InjectRepository(Country)
     private readonly countryRepository: Repository<Country>,
-  ) {}
+  ) {
+    super(countryRepository);
+  }
 
   private getFilePath(file: Express.Multer.File): string {
     return file.path.replace(/\\/g, '/');
@@ -35,8 +39,9 @@ export class CountriesService {
     return this.countryRepository.save(country);
   }
 
-  async findAll(): Promise<Country[]> {
-    return this.countryRepository.find();
+  async findAll(paginationDto: PaginationDto) {
+    const queryBuilder = this.countryRepository.createQueryBuilder('country');
+    return this.paginate(queryBuilder, paginationDto);
   }
 
   async findOne(id: string): Promise<Country> {

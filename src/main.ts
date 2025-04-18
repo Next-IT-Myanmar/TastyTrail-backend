@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
@@ -28,6 +29,9 @@ async function bootstrap() {
       forbidNonWhitelisted: false, // optional: avoids throwing if extra fields are passed
     }),
   );
+
+  // Apply global transform interceptor for standardized response format
+  app.useGlobalInterceptors(new TransformInterceptor());
   
   
   // Swagger configuration for non-production environments

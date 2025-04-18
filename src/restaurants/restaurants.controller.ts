@@ -1,12 +1,15 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseUUIDPipe, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { PaginatedRestaurantResponseDto, SingleRestaurantResponseDto } from './dto/restaurant-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RestaurantsService } from './restaurants.service';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { FilterRestaurantDto } from './dto/filter-restaurant.dto';
 import { Restaurant } from './entities/restaurant.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { ApiResponse as ApiResponseInterface } from '../common/interfaces/api-response.interface';
 
 @ApiTags('restaurants')
 @Controller('restaurants')
@@ -36,31 +39,74 @@ export class RestaurantsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all restaurants' })
-  @ApiResponse({ status: 200, description: 'Return all restaurants', type: [Restaurant] })
-  findAll() {
-    return this.restaurantsService.findAll();
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 10)' })
+  @ApiResponse({ status: 200, description: 'Return all restaurants', type: PaginatedRestaurantResponseDto })
+  async findAll(@Query() paginationDto: PaginationDto): Promise<ApiResponseInterface<Restaurant[]>> {
+    const { results, pagination } = await this.restaurantsService.findAll(
+      paginationDto.page,
+      paginationDto.limit
+    );
+    return {
+      data: results,
+      pagination,
+      message: 'Restaurants retrieved successfully'
+    };
   }
   
   @Get('by-category')
   @ApiOperation({ summary: 'Get restaurants by category IDs' })
-  @ApiResponse({ status: 200, description: 'Return filtered restaurants', type: [Restaurant] })
-  findByCategory(@Query() filterDto: FilterRestaurantDto) {
-    return this.restaurantsService.findByCategories(filterDto.categoryIds || []);
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 10)' })
+  @ApiResponse({ status: 200, description: 'Return filtered restaurants', type: PaginatedRestaurantResponseDto })
+  async findByCategory(
+    @Query() filterDto: FilterRestaurantDto,
+    @Query() paginationDto: PaginationDto
+  ): Promise<ApiResponseInterface<Restaurant[]>> {
+    const { results, pagination } = await this.restaurantsService.findByCategories(
+      filterDto.categoryIds || [],
+      paginationDto.page,
+      paginationDto.limit
+    );
+    return {
+      data: results,
+      pagination,
+      message: 'Restaurants retrieved successfully'
+    };
   }
 
   @Get('by-country-category')
   @ApiOperation({ summary: 'Get restaurants by both country and category IDs' })
-  @ApiResponse({ status: 200, description: 'Return filtered restaurants', type: [Restaurant] })
-  findByCountryAndCategory(@Query() filterDto: FilterRestaurantDto) {
-    return this.restaurantsService.findByCountryAndCategory(
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 10)' })
+  @ApiResponse({ status: 200, description: 'Return filtered restaurants', type: PaginatedRestaurantResponseDto })
+  async findByCountryAndCategory(
+    @Query() filterDto: FilterRestaurantDto,
+    @Query() paginationDto: PaginationDto
+  ): Promise<ApiResponseInterface<Restaurant[]>> {
+    const { results, pagination } = await this.restaurantsService.findByCountryAndCategory(
       filterDto.countryIds || [],
-      filterDto.categoryIds || []
+      filterDto.categoryIds || [],
+      paginationDto.page,
+      paginationDto.limit
     );
+    return {
+      data: results,
+      pagination,
+      message: 'Restaurants retrieved successfully'
+    };
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.restaurantsService.findOne(id);
+  @ApiOperation({ summary: 'Get restaurant by ID' })
+  @ApiResponse({ status: 200, description: 'Return restaurant by ID', type: SingleRestaurantResponseDto })
+  @ApiResponse({ status: 404, description: 'Restaurant not found' })
+  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<ApiResponseInterface<Restaurant>> {
+    const restaurant = await this.restaurantsService.findOne(id);
+    return {
+      data: restaurant,
+      message: 'Restaurant retrieved successfully'
+    };
   }
 
   @Patch(':id')
@@ -68,11 +114,11 @@ export class RestaurantsController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('img'))
   @ApiConsumes('multipart/form-data')
-  update(
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateRestaurantDto: UpdateRestaurantDto,
     @UploadedFile() file: Express.Multer.File,
-  ) {
+  ): Promise<ApiResponseInterface<Restaurant>> {
     if (typeof updateRestaurantDto.categoryIds === 'string') {
       updateRestaurantDto.categoryIds = updateRestaurantDto.categoryIds
         .split(',')
@@ -85,14 +131,22 @@ export class RestaurantsController {
         .map(id => id.trim());
     }
   
-    return this.restaurantsService.update(id, updateRestaurantDto, file);
+    const restaurant = await this.restaurantsService.update(id, updateRestaurantDto, file);
+    return {
+      data: restaurant,
+      message: 'Restaurant updated successfully'
+    };
   }
   
 
   @Delete(':id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.restaurantsService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<ApiResponseInterface<any>> {
+    await this.restaurantsService.remove(id);
+    return {
+      data: null,
+      message: 'Restaurant deleted successfully'
+    };
   }
 }

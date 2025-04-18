@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseUUIDPipe, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -6,6 +6,9 @@ import { CountriesService } from './countries.service';
 import { CreateCountryDto } from './dto/create-country.dto';
 import { UpdateCountryDto } from './dto/update-country.dto';
 import { Country } from './entities/country.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedCountryResponseDto, SingleCountryResponseDto } from './dto/country-response.dto';
+import { ApiResponse as ApiResponseInterface } from '../common/interfaces/api-response.interface';
 
 @ApiTags('Countries')
 @Controller('countries')
@@ -53,17 +56,22 @@ export class CountriesController {
 
   @Get()
   @ApiOperation({ summary: 'Get all countries' })
-  @ApiResponse({ status: 200, description: 'List of all countries', type: [Country] })
-  async findAll(): Promise<Country[]> {
-    return this.countriesService.findAll();
+  @ApiResponse({ status: 200, description: 'List of all countries', type: PaginatedCountryResponseDto })
+  async findAll(@Query() paginationDto: PaginationDto): Promise<ApiResponseInterface<Country[]>> {
+    const { results, pagination } = await this.countriesService.findAll(paginationDto);
+    return this.countriesService.buildPaginatedResponse(results, pagination);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a country by ID' })
-  @ApiResponse({ status: 200, description: 'Country found', type: Country })
+  @ApiResponse({ status: 200, description: 'Country found', type: SingleCountryResponseDto })
   @ApiResponse({ status: 404, description: 'Country not found' })
-  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Country> {
-    return this.countriesService.findOne(id);
+  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<ApiResponseInterface<Country>> {
+    const country = await this.countriesService.findOne(id);
+    return {
+      data: country,
+      message: 'Country retrieved successfully'
+    };
   }
 
   @Patch(':id')

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseIntPipe, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -6,6 +6,9 @@ import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category } from './entities/category.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedCategoryResponseDto, SingleCategoryResponseDto } from './dto/category-response.dto';
+import { ApiResponse as ApiResponseInterface } from '../common/interfaces/api-response.interface';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -40,17 +43,22 @@ export class CategoriesController {
 
   @Get()
   @ApiOperation({ summary: 'Get all categories' })
-  @ApiResponse({ status: 200, description: 'Return all categories', type: [Category] })
-  findAll() {
-    return this.categoriesService.findAll();
+  @ApiResponse({ status: 200, description: 'List of all categories', type: PaginatedCategoryResponseDto })
+  async findAll(@Query() paginationDto: PaginationDto): Promise<ApiResponseInterface<Category[]>> {
+    const { results, pagination } = await this.categoriesService.findAll(paginationDto);
+    return this.categoriesService.buildPaginatedResponse(results, pagination);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a category by id' })
-  @ApiResponse({ status: 200, description: 'Return the category', type: Category })
+  @ApiOperation({ summary: 'Get a category by ID' })
+  @ApiResponse({ status: 200, description: 'Category found', type: SingleCategoryResponseDto })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.categoriesService.findOne(id);
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<ApiResponseInterface<Category>> {
+    const category = await this.categoriesService.findOne(id);
+    return {
+      data: category,
+      message: 'Category retrieved successfully'
+    };
   }
 
   @Patch(':id')
