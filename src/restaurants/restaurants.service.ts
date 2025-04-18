@@ -120,6 +120,33 @@ export class RestaurantsService {
     return restaurants;
   }
 
+  // Get restaurants by both country and category IDs
+  async findByCountryAndCategory(countryIds: string[], categoryIds: number[]) {
+    if ((!countryIds || countryIds.length === 0) && (!categoryIds || categoryIds.length === 0)) {
+      return this.findAll();
+    }
+
+    // Convert categoryIds to numbers if they're not already
+    const parsedCategoryIds = this.convertCategoryIds(categoryIds);
+    
+    // Create query builder
+    const queryBuilder = this.restaurantRepository
+      .createQueryBuilder('restaurant')
+      .leftJoinAndSelect('restaurant.categories', 'category')
+      .leftJoinAndSelect('restaurant.countries', 'country');
+
+    // Add conditions based on provided filters
+    if (countryIds && countryIds.length > 0) {
+      queryBuilder.andWhere('country.id IN (:...countryIds)', { countryIds });
+    }
+
+    if (parsedCategoryIds && parsedCategoryIds.length > 0) {
+      queryBuilder.andWhere('category.id IN (:...categoryIds)', { categoryIds: parsedCategoryIds });
+    }
+
+    return queryBuilder.getMany();
+  }
+
   // Get a specific restaurant by ID, including categories and countries
   async findOne(id: string) {
     const restaurant = await this.restaurantRepository.findOne({

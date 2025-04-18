@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsOptional } from 'class-validator';
+import { IsArray, IsOptional, IsUUID } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class FilterRestaurantDto {
@@ -19,4 +19,20 @@ export class FilterRestaurantDto {
       : value,
   )
   categoryIds?: number[];
+
+  @ApiProperty({
+    example: ['uuid1', 'uuid2'],
+    description: 'Array of country IDs to filter restaurants by',
+    required: false,
+    type: [String],
+  })
+  @IsArray()
+  @IsOptional()
+  @IsUUID('4', { each: true })
+  @Transform(({ value }) =>
+    typeof value === 'string'
+      ? value.split(',').map((id) => id.trim())
+      : value,
+  )
+  countryIds?: string[];
 }
