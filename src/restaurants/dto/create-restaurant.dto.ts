@@ -59,6 +59,19 @@ export class CreateRestaurantDto {
     typeof value === 'string' ? value.split(',').map((item) => item.trim()) : value
   )
   countryIds?: string[] | string;
+
+  @ApiProperty({
+    example: {
+      facebook: 'www.facebook.com/restaurant',
+      whatsapp: 'www.whatsapp.com/restaurant',
+      twitter: 'www.twitter.com/restaurant'
+    },
+    description: 'Social media links of the restaurant',
+    required: false
+  })
+  @IsOptional()
+  @Transform(({ value }) => typeof value === 'string' ? JSON.parse(value) : value)
+  socialLink?: Record<string, string>;
 }
 
 

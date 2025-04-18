@@ -59,4 +59,15 @@ export class Restaurant {
   @ManyToMany(() => Country, (country) => country.restaurants)
   @JoinTable()  // This will create a junction table between Restaurant and Country
   countries: Country[];
+
+  @ApiProperty({
+    example: {
+      facebook: 'www.facebook.com/restaurant',
+      whatsapp: 'www.whatsapp.com/restaurant',
+      twitter: 'www.twitter.com/restaurant'
+    },
+    description: 'Social media links of the restaurant'
+  })
+  @Column('json', { nullable: true })
+  socialLink: Record<string, string>;
 }
