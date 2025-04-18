@@ -6,6 +6,7 @@ import { Category } from '../categories/entities/category.entity';
 import { Country } from '../countries/entities/country.entity';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
+import { SearchRestaurantDto } from './dto/search-restaurant.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -138,6 +139,43 @@ export class RestaurantsService {
       .leftJoinAndSelect('restaurant.categories', 'category')
       .leftJoinAndSelect('restaurant.countries', 'country')
       .where('country.id IN (:...countryIds)', { countryIds })
+      .orderBy('restaurant.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      results,
+      pagination: {
+        page,
+        limit,
+        total
+      }
+    };
+  }
+
+  // Search restaurants with keyword and country filter
+  async search(searchDto: SearchRestaurantDto) {
+    const { keyword, countryId, page = 1, limit = 10 } = searchDto;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.restaurantRepository
+      .createQueryBuilder('restaurant')
+      .leftJoinAndSelect('restaurant.categories', 'category')
+      .leftJoinAndSelect('restaurant.countries', 'country');
+
+    if (keyword) {
+      queryBuilder.andWhere(
+        '(LOWER(restaurant.name) LIKE LOWER(:keyword) OR LOWER(restaurant.description) LIKE LOWER(:keyword))',
+        { keyword: `%${keyword}%` }
+      );
+    }
+
+    if (countryId) {
+      queryBuilder.andWhere('country.id = :countryId', { countryId });
+    }
+
+    const [results, total] = await queryBuilder
       .orderBy('restaurant.createdAt', 'DESC')
       .skip(skip)
       .take(limit)

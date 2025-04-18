@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseUUIDPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseUUIDPipe, Query, ClassSerializerInterceptor } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { PaginatedRestaurantResponseDto, SingleRestaurantResponseDto } from './dto/restaurant-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RestaurantsService } from './restaurants.service';
@@ -10,11 +10,18 @@ import { FilterRestaurantDto } from './dto/filter-restaurant.dto';
 import { Restaurant } from './entities/restaurant.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { ApiResponse as ApiResponseInterface } from '../common/interfaces/api-response.interface';
-
+import { SearchRestaurantDto } from './dto/search-restaurant.dto';
 @ApiTags('restaurants')
 @Controller('restaurants')
+@UseInterceptors(ClassSerializerInterceptor)
 export class RestaurantsController {
   constructor(private readonly restaurantsService: RestaurantsService) {}
+
+  @Get('search')
+  @ApiOperation({ summary: 'Search restaurants by keyword and country' })
+  search(@Query() searchDto: SearchRestaurantDto) {
+    return this.restaurantsService.search(searchDto);
+  }
 
   @Post()
   @ApiBearerAuth()
