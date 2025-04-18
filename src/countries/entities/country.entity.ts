@@ -32,6 +32,5 @@ export class Country {
     description: 'Restaurants associated with this country',
     type: () => [Restaurant]
   })
-  @ManyToMany(() => Restaurant, (restaurant) => restaurant.countries)
   restaurants: Restaurant[];
 }
