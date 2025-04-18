@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Restaurant } from './entities/restaurant.entity';
 import { Category } from '../categories/entities/category.entity';
 import { Country } from '../countries/entities/country.entity';
@@ -36,31 +36,45 @@ export class RestaurantsService {
 
   // Create Restaurant and link categories
   async create(createRestaurantDto: CreateRestaurantDto, file: Express.Multer.File) {
-    let { categoryIds } = createRestaurantDto; // Extract categoryIds from DTO
-
-    // Convert categoryIds to number[] if it's a string or string[]
+    let { categoryIds, countryIds } = createRestaurantDto;
+  
+    // Convert categoryIds to number[]
     categoryIds = this.convertCategoryIds(categoryIds);
-
+  
+    // Convert countryIds to string[]
+    if (typeof countryIds === 'string') {
+      countryIds = countryIds.split(',').map(id => id.trim());
+    }
+  
     // Handle image upload
     const filePath = this.getFilePath(file);
-
-    // Get categories based on the provided IDs
+  
+    // Get categories
     const categories = await this.categoryRepository.findByIds(categoryIds || []);
-
-    // If some category IDs are invalid, throw an error
     if (categoryIds && categoryIds.length !== categories.length) {
       throw new BadRequestException('Some of the category IDs are invalid.');
     }
-
-    // Create restaurant entity
+  
+    // Get countries (UUIDs)
+    const countries = countryIds?.length
+      ? await this.countryRepository.findBy({ id: In(countryIds) })
+      : [];
+  
+    if (countryIds && countryIds.length !== countries.length) {
+      throw new BadRequestException('Some of the country IDs are invalid.');
+    }
+  
     const restaurant = this.restaurantRepository.create({
       ...createRestaurantDto,
       img: filePath,
-      categories, // Assign categories to the restaurant
+      categories,
+      countries,
     });
-
+  
     return this.restaurantRepository.save(restaurant);
   }
+  
+  
 
   // Get all restaurants with their associated categories and countries
   async findAll() {
@@ -86,38 +100,51 @@ export class RestaurantsService {
   // Update a restaurant, optionally updating the image and categories
   async update(id: string, updateRestaurantDto: UpdateRestaurantDto, file?: Express.Multer.File) {
     const restaurant = await this.findOne(id);
-
-    // Handle image upload if new file is provided
+  
     if (file) {
-      // Delete old image
       if (restaurant.img && fs.existsSync(restaurant.img)) {
         fs.unlinkSync(restaurant.img);
       }
-
-      // Save new image
       const filePath = this.getFilePath(file);
       Object.assign(updateRestaurantDto, { img: filePath });
     }
-
-    // Update categories if provided
+  
+    // Update categories
     if (updateRestaurantDto.categoryIds) {
-      // Convert categoryIds to number[] if it's a string or string[]
       const categoryIds = this.convertCategoryIds(updateRestaurantDto.categoryIds);
-
-      // Get categories based on the provided IDs
       const categories = await this.categoryRepository.findByIds(categoryIds);
-
-      // If some category IDs are invalid, throw an error
+  
       if (categoryIds.length !== categories.length) {
         throw new BadRequestException('Some of the category IDs are invalid.');
       }
-
+  
       Object.assign(updateRestaurantDto, { categories });
     }
-
+  
+    // Update countries
+    if (updateRestaurantDto.countryIds) {
+      let countryIds: string[];
+    
+      if (typeof updateRestaurantDto.countryIds === 'string') {
+        countryIds = updateRestaurantDto.countryIds.split(',').map(id => id.trim());
+      } else {
+        countryIds = updateRestaurantDto.countryIds;
+      }
+    
+      const countries = await this.countryRepository.findBy({ id: In(countryIds) });
+    
+      if (countryIds.length !== countries.length) {
+        throw new BadRequestException('Some of the country IDs are invalid.');
+      }
+    
+      Object.assign(updateRestaurantDto, { countries });
+    }
+    
+  
     Object.assign(restaurant, updateRestaurantDto);
     return this.restaurantRepository.save(restaurant);
   }
+  
 
   // Delete a restaurant and its associated image
   async remove(id: string) {

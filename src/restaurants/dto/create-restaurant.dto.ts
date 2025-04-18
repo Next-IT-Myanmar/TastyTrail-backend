@@ -50,6 +50,15 @@ export class CreateRestaurantDto {
     typeof value === 'string' ? value.split(',').map((item) => parseInt(item.trim(), 10)) : value
   )
   categoryIds?: string | string[] | number[];   // Change to number[]
+
+  @ApiProperty({ example: ['uuid1', 'uuid2'], description: 'Array of country UUIDs' })
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',').map((item) => item.trim()) : value
+  )
+  countryIds?: string[] | string;
 }
 
 
