@@ -24,24 +24,52 @@ export class RestaurantsService {
     return file.path.replace(/\\/g, '/');
   }
 
+  // Utility function to convert categoryIds to number[] if it's a string or string[]
+  private convertCategoryIds(categoryIds: string | string[] | number[]): number[] {
+    if (typeof categoryIds === 'string') {
+      return categoryIds.split(',').map(id => parseInt(id.trim(), 10));
+    } else if (Array.isArray(categoryIds)) {
+      return categoryIds.map(id => (typeof id === 'string' ? parseInt(id, 10) : id));
+    }
+    return categoryIds;
+  }
+
+  // Create Restaurant and link categories
   async create(createRestaurantDto: CreateRestaurantDto, file: Express.Multer.File) {
+    let { categoryIds } = createRestaurantDto; // Extract categoryIds from DTO
+
+    // Convert categoryIds to number[] if it's a string or string[]
+    categoryIds = this.convertCategoryIds(categoryIds);
+
     // Handle image upload
     const filePath = this.getFilePath(file);
 
+    // Get categories based on the provided IDs
+    const categories = await this.categoryRepository.findByIds(categoryIds || []);
+
+    // If some category IDs are invalid, throw an error
+    if (categoryIds && categoryIds.length !== categories.length) {
+      throw new BadRequestException('Some of the category IDs are invalid.');
+    }
+
+    // Create restaurant entity
     const restaurant = this.restaurantRepository.create({
       ...createRestaurantDto,
       img: filePath,
+      categories, // Assign categories to the restaurant
     });
 
     return this.restaurantRepository.save(restaurant);
   }
 
+  // Get all restaurants with their associated categories and countries
   async findAll() {
     return this.restaurantRepository.find({
       relations: ['categories', 'countries'],
     });
   }
 
+  // Get a specific restaurant by ID, including categories and countries
   async findOne(id: string) {
     const restaurant = await this.restaurantRepository.findOne({
       where: { id },
@@ -55,6 +83,7 @@ export class RestaurantsService {
     return restaurant;
   }
 
+  // Update a restaurant, optionally updating the image and categories
   async update(id: string, updateRestaurantDto: UpdateRestaurantDto, file?: Express.Multer.File) {
     const restaurant = await this.findOne(id);
 
@@ -70,10 +99,27 @@ export class RestaurantsService {
       Object.assign(updateRestaurantDto, { img: filePath });
     }
 
+    // Update categories if provided
+    if (updateRestaurantDto.categoryIds) {
+      // Convert categoryIds to number[] if it's a string or string[]
+      const categoryIds = this.convertCategoryIds(updateRestaurantDto.categoryIds);
+
+      // Get categories based on the provided IDs
+      const categories = await this.categoryRepository.findByIds(categoryIds);
+
+      // If some category IDs are invalid, throw an error
+      if (categoryIds.length !== categories.length) {
+        throw new BadRequestException('Some of the category IDs are invalid.');
+      }
+
+      Object.assign(updateRestaurantDto, { categories });
+    }
+
     Object.assign(restaurant, updateRestaurantDto);
     return this.restaurantRepository.save(restaurant);
   }
 
+  // Delete a restaurant and its associated image
   async remove(id: string) {
     const restaurant = await this.findOne(id);
 

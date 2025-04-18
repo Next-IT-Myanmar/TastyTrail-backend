@@ -1,10 +1,9 @@
-import { IsString, IsUrl, IsNotEmpty, IsArray } from 'class-validator';
-import { Transform } from 'class-transformer';
+// CreateRestaurantDto
+import { IsString, IsUrl, IsNotEmpty, IsArray, IsInt, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { RestaurantRelationsDto } from './restaurant-relations.dto';
+import { Transform } from 'class-transformer';
 
-export class CreateRestaurantDto extends RestaurantRelationsDto {
-
+export class CreateRestaurantDto {
   @ApiProperty({ example: 'Restaurant Name' })
   @IsString()
   @IsNotEmpty()
@@ -37,4 +36,20 @@ export class CreateRestaurantDto extends RestaurantRelationsDto {
   @IsString()
   @IsNotEmpty()
   closeHour: string;
+
+  @IsOptional()
+  @IsInt()
+  @Transform(({ value }) => value !== undefined ? parseInt(value, 10) : undefined)
+  @ApiProperty({ example: 1, description: 'Rank of the restaurant', required: false })
+  rank?: number;
+
+  @ApiProperty({ example: [1, 2, 3], description: 'Array of category IDs associated with the restaurant' })
+  @IsArray()
+  @IsOptional()
+  @Transform(({ value }) => 
+    typeof value === 'string' ? value.split(',').map((item) => parseInt(item.trim(), 10)) : value
+  )
+  categoryIds?: string | string[] | number[];   // Change to number[]
 }
+
+

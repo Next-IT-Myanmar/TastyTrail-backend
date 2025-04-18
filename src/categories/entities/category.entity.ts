@@ -50,6 +50,6 @@ export class Category {
     description: 'Restaurants associated with this category',
     type: () => [Restaurant]
   })
-  @ManyToMany(() => Restaurant, restaurant => restaurant.categories)
+
   restaurants: Restaurant[];
 }

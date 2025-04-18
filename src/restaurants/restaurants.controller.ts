@@ -20,6 +20,11 @@ export class RestaurantsController {
     @Body() createRestaurantDto: CreateRestaurantDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    // Check if categoryIds is a string and convert it to number[] if necessary
+    if (typeof createRestaurantDto.categoryIds === 'string') {
+      createRestaurantDto.categoryIds = createRestaurantDto.categoryIds.split(',').map(id => parseInt(id.trim(), 10));
+    }
+    
     return this.restaurantsService.create(createRestaurantDto, file);
   }
 

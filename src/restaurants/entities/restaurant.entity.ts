@@ -37,6 +37,11 @@ export class Restaurant {
   @Column('time')
   closeHour: string;
 
+  
+  @ApiProperty({ example: 1, description: 'Rank of the restaurant' })
+  @Column('int', { default: 0 })
+  rank: number;
+
   @ApiProperty({ description: 'Creation timestamp of the restaurant' })
   @CreateDateColumn()
   createdAt: Date;
@@ -45,13 +50,13 @@ export class Restaurant {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ApiProperty({ type: () => [Category], description: 'Categories associated with this restaurant' })
-  @ManyToMany(() => Category, category => category.restaurants)
-  @JoinTable()
+  @ApiProperty({ type: () => [Category], description: 'Categories associated with the restaurant' })
+  @ManyToMany(() => Category)
+  @JoinTable()  // This will create a junction table between Restaurant and Category
   categories: Category[];
 
-  @ApiProperty({ type: () => [Country], description: 'Countries associated with this restaurant' })
-  @ManyToMany(() => Country, country => country.restaurants)
-  @JoinTable()
+  @ApiProperty({ type: () => [Country], description: 'Countries associated with the restaurant' })
+  @ManyToMany(() => Country, (country) => country.restaurants)
+  @JoinTable()  // This will create a junction table between Restaurant and Country
   countries: Country[];
 }
