@@ -4,7 +4,7 @@ import { Transform } from 'class-transformer';
 
 export class FilterByCountryDto {
   @ApiProperty({
-    example: ['123e4567-e89b-12d3-a456-426614174000', '123e4567-e89b-12d3-a456-426614174001'],
+    example: ['123e4567-e89b-12d3-a456-426614174000'],
     description: 'Array of country IDs to filter restaurants by',
     required: false,
     type: [String],
@@ -12,8 +12,12 @@ export class FilterByCountryDto {
   @IsArray()
   @IsOptional()
   @IsUUID('4', { each: true })
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.split(',').map((id) => id.trim()) : value
-  )
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      return value.includes(',') ? value.split(',') : [value];
+    }
+    return [];
+  })
   countryIds?: string[];
 }

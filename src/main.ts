@@ -21,8 +21,15 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   });
 
-  app.useGlobalPipes(new ValidationPipe());
-
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true, // optional: strips unwanted properties
+      forbidNonWhitelisted: false, // optional: avoids throwing if extra fields are passed
+    }),
+  );
+  
+  
   // Swagger configuration for non-production environments
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()

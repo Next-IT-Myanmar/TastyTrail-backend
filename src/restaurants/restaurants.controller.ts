@@ -7,6 +7,7 @@ import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { FilterRestaurantDto } from './dto/filter-restaurant.dto';
 import { Restaurant } from './entities/restaurant.entity';
+import { FilterByCountryDto } from './dto/filter-by-country.dto';
 
 @ApiTags('restaurants')
 @Controller('restaurants')
@@ -46,6 +47,13 @@ export class RestaurantsController {
   @ApiResponse({ status: 200, description: 'Return filtered restaurants', type: [Restaurant] })
   findByCategory(@Query() filterDto: FilterRestaurantDto) {
     return this.restaurantsService.findByCategories(filterDto.categoryIds || []);
+  }
+
+  @Get('by-country')
+  @ApiOperation({ summary: 'Get restaurants by country IDs' })
+  @ApiResponse({ status: 200, description: 'Return filtered restaurants', type: [Restaurant] })
+  findByCountry(@Query() filterDto: FilterByCountryDto) {
+    return this.restaurantsService.findByCountries(filterDto.countryIds || []);
   }
 
   @Get(':id')
