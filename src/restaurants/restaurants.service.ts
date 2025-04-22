@@ -256,6 +256,45 @@ export class RestaurantsService {
     };
   }
 
+  // Get restaurants by both country and cuisine IDs with pagination
+  async findByCountryAndCuisine(countryIds: string[], cuisineIds: number[], page: number = 1, limit: number = 10) {
+    if ((!countryIds || countryIds.length === 0) && (!cuisineIds || cuisineIds.length === 0)) {
+      return this.findAll(page, limit);
+    }
+
+    const skip = (page - 1) * limit;
+    const parsedCuisineIds = this.convertCuisineIds(cuisineIds);
+    
+    const queryBuilder = this.restaurantRepository
+      .createQueryBuilder('restaurant')
+      .leftJoinAndSelect('restaurant.categories', 'category')
+      .leftJoinAndSelect('restaurant.countries', 'country')
+      .leftJoinAndSelect('restaurant.cuisines', 'cuisine');
+
+    if (countryIds && countryIds.length > 0) {
+      queryBuilder.andWhere('country.id IN (:...countryIds)', { countryIds });
+    }
+
+    if (parsedCuisineIds && parsedCuisineIds.length > 0) {
+      queryBuilder.andWhere('cuisine.id IN (:...cuisineIds)', { cuisineIds: parsedCuisineIds });
+    }
+
+    const [results, total] = await queryBuilder
+      .orderBy('restaurant.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      results,
+      pagination: {
+        page,
+        limit,
+        total
+      }
+    };
+  }
+
   // Get a specific restaurant by ID, including categories, countries, and cuisines
   async findOne(id: string) {
     const restaurant = await this.restaurantRepository.findOne({
@@ -270,7 +309,7 @@ export class RestaurantsService {
     return restaurant;
   }
 
-  // Update a restaurant, optionally updating the image and categories
+  // Update a restaurant, optionally updating the image, categories, countries, and cuisines
   async update(id: string, updateRestaurantDto: UpdateRestaurantDto, file?: Express.Multer.File) {
     const restaurant = await this.findOne(id);
   
@@ -313,6 +352,17 @@ export class RestaurantsService {
       Object.assign(updateRestaurantDto, { countries });
     }
     
+    // Update cuisines
+    if (updateRestaurantDto.cuisineIds) {
+      const cuisineIds = this.convertCuisineIds(updateRestaurantDto.cuisineIds);
+      const cuisines = await this.cuisineRepository.findByIds(cuisineIds);
+  
+      if (cuisineIds.length !== cuisines.length) {
+        throw new BadRequestException('Some of the cuisine IDs are invalid.');
+      }
+  
+      Object.assign(updateRestaurantDto, { cuisines });
+    }
   
     Object.assign(restaurant, updateRestaurantDto);
     return this.restaurantRepository.save(restaurant);

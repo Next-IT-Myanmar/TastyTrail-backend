@@ -104,6 +104,28 @@ export class RestaurantsController {
     };
   }
 
+  @Get('by-country-cuisines')
+  @ApiOperation({ summary: 'Get restaurants by both country and cuisine IDs' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 10)' })
+  @ApiResponse({ status: 200, description: 'Return filtered restaurants', type: PaginatedRestaurantResponseDto })
+  async findByCountryAndCuisine(
+    @Query() filterDto: FilterRestaurantDto,
+    @Query() paginationDto: PaginationDto
+  ): Promise<ApiResponseInterface<Restaurant[]>> {
+    const { results, pagination } = await this.restaurantsService.findByCountryAndCuisine(
+      filterDto.countryIds || [],
+      filterDto.cuisineIds || [],
+      paginationDto.page,
+      paginationDto.limit
+    );
+    return {
+      data: results,
+      pagination,
+      message: 'Restaurants retrieved successfully'
+    };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get restaurant by ID' })
   @ApiResponse({ status: 200, description: 'Return restaurant by ID', type: SingleRestaurantResponseDto })
@@ -136,6 +158,12 @@ export class RestaurantsController {
       updateRestaurantDto.countryIds = updateRestaurantDto.countryIds
         .split(',')
         .map(id => id.trim());
+    }
+
+    if (typeof updateRestaurantDto.cuisineIds === 'string') {
+      updateRestaurantDto.cuisineIds = updateRestaurantDto.cuisineIds
+        .split(',')
+        .map(id => parseInt(id.trim(), 10));
     }
   
     const restaurant = await this.restaurantsService.update(id, updateRestaurantDto, file);
