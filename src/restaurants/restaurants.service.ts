@@ -4,7 +4,7 @@ import { In, Repository } from 'typeorm';
 import { Restaurant } from './entities/restaurant.entity';
 import { Category } from '../categories/entities/category.entity';
 import { Country } from '../countries/entities/country.entity';
-import { Cuisine } from '../cuisines/entities/cuisine.entity';
+import { Cuisine } from '../cuisines/entities/cuisine.entity'; 
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { SearchRestaurantDto } from './dto/search-restaurant.dto';
