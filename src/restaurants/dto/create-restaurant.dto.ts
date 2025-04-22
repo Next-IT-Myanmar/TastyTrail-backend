@@ -60,6 +60,14 @@ export class CreateRestaurantDto {
   )
   countryIds?: string[] | string;
 
+  @ApiProperty({ example: [1, 2, 3], description: 'Array of cuisine IDs associated with the restaurant' })
+  @IsArray()
+  @IsOptional()
+  @Transform(({ value }) => 
+    typeof value === 'string' ? value.split(',').map((item) => parseInt(item.trim(), 10)) : value
+  )
+  cuisineIds?: string | string[] | number[];
+
   @ApiProperty({
     example: {
       facebook: 'www.facebook.com/restaurant',

@@ -41,6 +41,7 @@ async function bootstrap() {
       .setDescription('The MM Tasty -> prepared by NIM.')
       .setVersion('1.0')
       .addBearerAuth()
+      .addTag('Cuisines', 'Cuisine management endpoints')
       .build();
     
     const document = SwaggerModule.createDocument(app, config);

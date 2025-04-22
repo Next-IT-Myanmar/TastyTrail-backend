@@ -9,10 +9,11 @@ import { RestaurantsController } from './restaurants.controller';
 import { Restaurant } from './entities/restaurant.entity';
 import { Category } from '../categories/entities/category.entity';
 import { Country } from '../countries/entities/country.entity';
+import { Cuisine } from '../cuisines/entities/cuisine.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Restaurant, Category, Country]),
+    TypeOrmModule.forFeature([Restaurant, Category, Country, Cuisine]),
     MulterModule.register({
       storage: diskStorage({
         destination: './uploads/restaurant', // ✅ saves under 'uploads/restaurant'

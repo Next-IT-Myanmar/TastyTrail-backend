@@ -4,6 +4,7 @@ import { In, Repository } from 'typeorm';
 import { Restaurant } from './entities/restaurant.entity';
 import { Category } from '../categories/entities/category.entity';
 import { Country } from '../countries/entities/country.entity';
+import { Cuisine } from '../cuisines/entities/cuisine.entity';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { SearchRestaurantDto } from './dto/search-restaurant.dto';
@@ -19,6 +20,8 @@ export class RestaurantsService {
     private categoryRepository: Repository<Category>,
     @InjectRepository(Country)
     private countryRepository: Repository<Country>,
+    @InjectRepository(Cuisine)
+    private cuisineRepository: Repository<Cuisine>,
   ) {}
 
   private getFilePath(file: Express.Multer.File): string {
@@ -35,12 +38,25 @@ export class RestaurantsService {
     return categoryIds;
   }
 
-  // Create Restaurant and link categories
+  // Utility function to convert cuisineIds to number[] if it's a string or string[]
+  private convertCuisineIds(cuisineIds: string | string[] | number[]): number[] {
+    if (typeof cuisineIds === 'string') {
+      return cuisineIds.split(',').map(id => parseInt(id.trim(), 10));
+    } else if (Array.isArray(cuisineIds)) {
+      return cuisineIds.map(id => (typeof id === 'string' ? parseInt(id, 10) : id));
+    }
+    return cuisineIds;
+  }
+
+  // Create Restaurant and link categories, countries, and cuisines
   async create(createRestaurantDto: CreateRestaurantDto, file: Express.Multer.File) {
-    let { categoryIds, countryIds } = createRestaurantDto;
+    let { categoryIds, countryIds, cuisineIds } = createRestaurantDto;
   
     // Convert categoryIds to number[]
     categoryIds = this.convertCategoryIds(categoryIds);
+  
+    // Convert cuisineIds to number[]
+    cuisineIds = this.convertCuisineIds(cuisineIds);
   
     // Convert countryIds to string[]
     if (typeof countryIds === 'string') {
@@ -64,12 +80,19 @@ export class RestaurantsService {
     if (countryIds && countryIds.length !== countries.length) {
       throw new BadRequestException('Some of the country IDs are invalid.');
     }
+
+    // Get cuisines
+    const cuisines = await this.cuisineRepository.findByIds(cuisineIds || []);
+    if (cuisineIds && cuisineIds.length !== cuisines.length) {
+      throw new BadRequestException('Some of the cuisine IDs are invalid.');
+    }
   
     const restaurant = this.restaurantRepository.create({
       ...createRestaurantDto,
       img: filePath,
       categories,
       countries,
+      cuisines,
     });
   
     return this.restaurantRepository.save(restaurant);
@@ -77,12 +100,12 @@ export class RestaurantsService {
   
   
 
-  // Get all restaurants with their associated categories and countries with pagination
+  // Get all restaurants with their associated categories, countries, and cuisines with pagination
   async findAll(page: number = 1, limit: number = 10) {
     const skip = (page - 1) * limit;
     
     const [results, total] = await this.restaurantRepository.findAndCount({
-      relations: ['categories', 'countries'],
+      relations: ['categories', 'countries', 'cuisines'],
       skip,
       take: limit,
       order: { createdAt: 'DESC' }
@@ -111,6 +134,7 @@ export class RestaurantsService {
       .createQueryBuilder('restaurant')
       .leftJoinAndSelect('restaurant.categories', 'category')
       .leftJoinAndSelect('restaurant.countries', 'country')
+      .leftJoinAndSelect('restaurant.cuisines', 'cuisine')
       .where('category.id IN (:...categoryIds)', { categoryIds: parsedCategoryIds })
       .orderBy('restaurant.createdAt', 'DESC')
       .skip(skip)
@@ -138,6 +162,7 @@ export class RestaurantsService {
       .createQueryBuilder('restaurant')
       .leftJoinAndSelect('restaurant.categories', 'category')
       .leftJoinAndSelect('restaurant.countries', 'country')
+      .leftJoinAndSelect('restaurant.cuisines', 'cuisine')
       .where('country.id IN (:...countryIds)', { countryIds })
       .orderBy('restaurant.createdAt', 'DESC')
       .skip(skip)
@@ -162,7 +187,8 @@ export class RestaurantsService {
     const queryBuilder = this.restaurantRepository
       .createQueryBuilder('restaurant')
       .leftJoinAndSelect('restaurant.categories', 'category')
-      .leftJoinAndSelect('restaurant.countries', 'country');
+      .leftJoinAndSelect('restaurant.countries', 'country')
+      .leftJoinAndSelect('restaurant.cuisines', 'cuisine');
 
     if (keyword) {
       queryBuilder.andWhere(
@@ -203,7 +229,8 @@ export class RestaurantsService {
     const queryBuilder = this.restaurantRepository
       .createQueryBuilder('restaurant')
       .leftJoinAndSelect('restaurant.categories', 'category')
-      .leftJoinAndSelect('restaurant.countries', 'country');
+      .leftJoinAndSelect('restaurant.countries', 'country')
+      .leftJoinAndSelect('restaurant.cuisines', 'cuisine');
 
     if (countryIds && countryIds.length > 0) {
       queryBuilder.andWhere('country.id IN (:...countryIds)', { countryIds });
@@ -229,11 +256,11 @@ export class RestaurantsService {
     };
   }
 
-  // Get a specific restaurant by ID, including categories and countries
+  // Get a specific restaurant by ID, including categories, countries, and cuisines
   async findOne(id: string) {
     const restaurant = await this.restaurantRepository.findOne({
       where: { id },
-      relations: ['categories', 'countries'],
+      relations: ['categories', 'countries', 'cuisines'],
     });
 
     if (!restaurant) {

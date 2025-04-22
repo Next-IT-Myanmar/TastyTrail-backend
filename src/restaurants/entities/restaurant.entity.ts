@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, CreateDa
 import { ApiProperty } from '@nestjs/swagger';
 import { Category } from '../../categories/entities/category.entity';
 import { Country } from '../../countries/entities/country.entity';
+import { Cuisine } from '../../cuisines/entities/cuisine.entity';
 
 @Entity()
 export class Restaurant {
@@ -59,6 +60,11 @@ export class Restaurant {
   @ManyToMany(() => Country, (country) => country.restaurants)
   @JoinTable()  // This will create a junction table between Restaurant and Country
   countries: Country[];
+
+  @ApiProperty({ type: () => [Cuisine], description: 'Cuisines associated with the restaurant' })
+  @ManyToMany(() => Cuisine)
+  @JoinTable()  // This will create a junction table between Restaurant and Cuisine
+  cuisines: Cuisine[];
 
   @ApiProperty({
     example: {
