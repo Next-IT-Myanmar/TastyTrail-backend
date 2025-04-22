@@ -199,7 +199,12 @@ export class RestaurantsService {
 
     if (keyword) {
       queryBuilder.andWhere(
-        '(LOWER(restaurant.name) LIKE LOWER(:keyword) OR LOWER(restaurant.description) LIKE LOWER(:keyword))',
+        '(LOWER(restaurant.name) LIKE LOWER(:keyword) OR ' +
+        'LOWER(restaurant.description) LIKE LOWER(:keyword) OR ' +
+        'LOWER(category.name) LIKE LOWER(:keyword) OR ' +
+        'LOWER(category.description) LIKE LOWER(:keyword) OR ' +
+        'LOWER(cuisine.name) LIKE LOWER(:keyword) OR ' +
+        'LOWER(cuisine.description) LIKE LOWER(:keyword))',
         { keyword: `%${keyword}%` }
       );
     }
