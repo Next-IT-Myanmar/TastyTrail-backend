@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseUUIDPipe, Query, ClassSerializerInterceptor } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, UploadedFiles, ParseUUIDPipe, Query, ClassSerializerInterceptor } from '@nestjs/common';
+import { FileInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { PaginatedRestaurantResponseDto, SingleRestaurantResponseDto } from './dto/restaurant-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -26,7 +26,10 @@ export class RestaurantsController {
   @Post()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('img'))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'img', maxCount: 1 },
+    { name: 'otherPhoto', maxCount: 10 }
+  ]))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create a new restaurant' })
   @ApiResponse({ status: 201, description: 'Restaurant created successfully', type: Restaurant })
@@ -39,6 +42,11 @@ export class RestaurantsController {
         name: { type: 'string', example: 'Restaurant Name' },
         description: { type: 'string', example: 'A detailed description of the restaurant' },
         img: { type: 'string', format: 'binary', description: 'Restaurant image' },
+        otherPhoto: { 
+          type: 'array', 
+          items: { type: 'string', format: 'binary' },
+          description: 'Additional photos of the restaurant (up to 10)'
+        },
         map: { type: 'string', example: 'https://maps.google.com/...' },
         address: { type: 'string', example: '123 Main Street, City, Country' },
         openHour: { type: 'string', example: '09:00' },
@@ -57,14 +65,14 @@ export class RestaurantsController {
   })
   create(
     @Body() createRestaurantDto: CreateRestaurantDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: { img?: Express.Multer.File[], otherPhoto?: Express.Multer.File[] },
   ) {
     // Check if categoryIds is a string and convert it to number[] if necessary
     if (typeof createRestaurantDto.categoryIds === 'string') {
       createRestaurantDto.categoryIds = createRestaurantDto.categoryIds.split(',').map(id => parseInt(id.trim(), 10));
     }
     
-    return this.restaurantsService.create(createRestaurantDto, file);
+    return this.restaurantsService.create(createRestaurantDto, files.img?.[0], files.otherPhoto);
   }
 
   @Get()
@@ -164,7 +172,10 @@ export class RestaurantsController {
   @Patch(':id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('img'))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'img', maxCount: 1 },
+    { name: 'otherPhoto', maxCount: 10 }
+  ]))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Update a restaurant' })
   @ApiResponse({ status: 200, description: 'Restaurant updated successfully', type: SingleRestaurantResponseDto })
@@ -178,6 +189,11 @@ export class RestaurantsController {
         name: { type: 'string', example: 'Restaurant Name' },
         description: { type: 'string', example: 'A detailed description of the restaurant' },
         img: { type: 'string', format: 'binary', description: 'Restaurant image' },
+        otherPhoto: { 
+          type: 'array', 
+          items: { type: 'string', format: 'binary' },
+          description: 'Additional photos of the restaurant (up to 10)'
+        },
         map: { type: 'string', example: 'https://maps.google.com/...' },
         address: { type: 'string', example: '123 Main Street, City, Country' },
         openHour: { type: 'string', example: '09:00' },
@@ -196,7 +212,7 @@ export class RestaurantsController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateRestaurantDto: UpdateRestaurantDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: { img?: Express.Multer.File[], otherPhoto?: Express.Multer.File[] },
   ): Promise<ApiResponseInterface<Restaurant>> {
     if (typeof updateRestaurantDto.categoryIds === 'string') {
       updateRestaurantDto.categoryIds = updateRestaurantDto.categoryIds
@@ -216,7 +232,7 @@ export class RestaurantsController {
         .map(id => parseInt(id.trim(), 10));
     }
   
-    const restaurant = await this.restaurantsService.update(id, updateRestaurantDto, file);
+    const restaurant = await this.restaurantsService.update(id, updateRestaurantDto, files.img?.[0], files.otherPhoto);
     return {
       data: restaurant,
       message: 'Restaurant updated successfully'

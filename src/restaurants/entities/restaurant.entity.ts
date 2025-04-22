@@ -22,6 +22,10 @@ export class Restaurant {
   @Column()
   img: string;
 
+  @ApiProperty({ example: ['photo1.jpg', 'photo2.jpg'], description: 'Additional photos of the restaurant' })
+  @Column('simple-array', { nullable: true })
+  otherPhoto: string[];
+
   @ApiProperty({ example: 'map-location.jpg', description: 'Map location of the restaurant' })
   @Column()
   map: string;

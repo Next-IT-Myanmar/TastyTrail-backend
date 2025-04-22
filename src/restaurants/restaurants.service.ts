@@ -49,7 +49,7 @@ export class RestaurantsService {
   }
 
   // Create Restaurant and link categories, countries, and cuisines
-  async create(createRestaurantDto: CreateRestaurantDto, file: Express.Multer.File) {
+  async create(createRestaurantDto: CreateRestaurantDto, file: Express.Multer.File, otherPhotoFiles?: Express.Multer.File[]) {
     let { categoryIds, countryIds, cuisineIds } = createRestaurantDto;
   
     // Convert categoryIds to number[]
@@ -63,8 +63,14 @@ export class RestaurantsService {
       countryIds = countryIds.split(',').map(id => id.trim());
     }
   
-    // Handle image upload
+    // Handle main image upload
     const filePath = this.getFilePath(file);
+
+    // Handle other photos upload
+    let otherPhotoFilePaths: string[] = [];
+    if (otherPhotoFiles && otherPhotoFiles.length > 0) {
+      otherPhotoFilePaths = otherPhotoFiles.map(file => this.getFilePath(file));
+    }
   
     // Get categories
     const categories = await this.categoryRepository.findByIds(categoryIds || []);
@@ -90,6 +96,7 @@ export class RestaurantsService {
     const restaurant = this.restaurantRepository.create({
       ...createRestaurantDto,
       img: filePath,
+      otherPhoto: otherPhotoFilePaths,
       categories,
       countries,
       cuisines,
@@ -309,8 +316,8 @@ export class RestaurantsService {
     return restaurant;
   }
 
-  // Update a restaurant, optionally updating the image, categories, countries, and cuisines
-  async update(id: string, updateRestaurantDto: UpdateRestaurantDto, file?: Express.Multer.File) {
+  // Update a restaurant, optionally updating the image, other photos, categories, countries, and cuisines
+  async update(id: string, updateRestaurantDto: UpdateRestaurantDto, file?: Express.Multer.File, otherPhotoFiles?: Express.Multer.File[]) {
     const restaurant = await this.findOne(id);
   
     if (file) {
@@ -319,6 +326,21 @@ export class RestaurantsService {
       }
       const filePath = this.getFilePath(file);
       Object.assign(updateRestaurantDto, { img: filePath });
+    }
+
+    // Handle other photos upload
+    if (otherPhotoFiles && otherPhotoFiles.length > 0) {
+      // Delete existing other photos if they exist
+      if (restaurant.otherPhoto && restaurant.otherPhoto.length > 0) {
+        restaurant.otherPhoto.forEach(photoPath => {
+          if (fs.existsSync(photoPath)) {
+            fs.unlinkSync(photoPath);
+          }
+        });
+      }
+      
+      const otherPhotoFilePaths = otherPhotoFiles.map(file => this.getFilePath(file));
+      Object.assign(updateRestaurantDto, { otherPhoto: otherPhotoFilePaths });
     }
   
     // Update categories
@@ -379,6 +401,16 @@ export class RestaurantsService {
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
       }
+    }
+
+    // Delete other photos if they exist
+    if (restaurant.otherPhoto && restaurant.otherPhoto.length > 0) {
+      restaurant.otherPhoto.forEach(photoPath => {
+        const fullPath = path.join(process.cwd(), photoPath);
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
+        }
+      });
     }
 
     await this.restaurantRepository.remove(restaurant);

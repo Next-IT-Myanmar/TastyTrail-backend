@@ -17,6 +17,10 @@ export class CreateRestaurantDto {
   @ApiProperty({ type: 'string', format: 'binary' })
   img: Express.Multer.File;
 
+  @ApiProperty({ type: 'array', items: { type: 'string', format: 'binary' }, description: 'Additional photos of the restaurant' })
+  @IsOptional()
+  otherPhoto?: Express.Multer.File[];
+
   @ApiProperty({ example: 'https://maps.google.com/...' })
   @IsUrl()
   @IsNotEmpty()
