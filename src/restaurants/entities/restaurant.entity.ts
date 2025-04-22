@@ -42,6 +42,18 @@ export class Restaurant {
   @ApiProperty({ example: 1, description: 'Rank of the restaurant' })
   @Column('int', { default: 0 })
   rank: number;
+  
+  @ApiProperty({ example: 2, description: 'Price range of the restaurant (1-5, where 1 is cheapest and 5 is most expensive)' })
+  @Column('int', { default: 1 })
+  priceRange: number;
+  
+  @ApiProperty({ example: true, description: 'Whether the restaurant has a promotion' })
+  @Column('boolean', { default: false })
+  isPromotion: boolean;
+  
+  @ApiProperty({ example: 15, description: 'Promotion rate as a percentage (e.g., 15 for 15% off)' })
+  @Column('int', { default: 0, nullable: true })
+  promoRate: number;
 
   @ApiProperty({ description: 'Creation timestamp of the restaurant' })
   @CreateDateColumn()

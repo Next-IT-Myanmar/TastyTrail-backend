@@ -32,6 +32,29 @@ export class RestaurantsController {
   @ApiResponse({ status: 201, description: 'Restaurant created successfully', type: Restaurant })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'Restaurant Name' },
+        description: { type: 'string', example: 'A detailed description of the restaurant' },
+        img: { type: 'string', format: 'binary', description: 'Restaurant image' },
+        map: { type: 'string', example: 'https://maps.google.com/...' },
+        address: { type: 'string', example: '123 Main Street, City, Country' },
+        openHour: { type: 'string', example: '09:00' },
+        closeHour: { type: 'string', example: '22:00' },
+        rank: { type: 'integer', example: 1 },
+        priceRange: { type: 'integer', example: 2, description: 'Price range (1-5)' },
+        isPromotion: { type: 'boolean', example: true, description: 'Has promotion' },
+        promoRate: { type: 'integer', example: 15, description: 'Promotion rate (%)' },
+        categoryIds: { type: 'string', example: '1,2,3', description: 'Comma-separated category IDs' },
+        countryIds: { type: 'string', example: 'uuid1,uuid2', description: 'Comma-separated country UUIDs' },
+        cuisineIds: { type: 'string', example: '1,2,3', description: 'Comma-separated cuisine IDs' },
+        socialLink: { type: 'string', example: '{"facebook":"www.facebook.com/restaurant"}' }
+      },
+      required: ['name', 'description', 'map', 'address', 'openHour', 'closeHour']
+    }
+  })
   create(
     @Body() createRestaurantDto: CreateRestaurantDto,
     @UploadedFile() file: Express.Multer.File,
@@ -143,6 +166,33 @@ export class RestaurantsController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('img'))
   @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Update a restaurant' })
+  @ApiResponse({ status: 200, description: 'Restaurant updated successfully', type: SingleRestaurantResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Restaurant not found' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'Restaurant Name' },
+        description: { type: 'string', example: 'A detailed description of the restaurant' },
+        img: { type: 'string', format: 'binary', description: 'Restaurant image' },
+        map: { type: 'string', example: 'https://maps.google.com/...' },
+        address: { type: 'string', example: '123 Main Street, City, Country' },
+        openHour: { type: 'string', example: '09:00' },
+        closeHour: { type: 'string', example: '22:00' },
+        rank: { type: 'integer', example: 1 },
+        priceRange: { type: 'integer', example: 2, description: 'Price range (1-5)' },
+        isPromotion: { type: 'boolean', example: true, description: 'Has promotion' },
+        promoRate: { type: 'integer', example: 15, description: 'Promotion rate (%)' },
+        categoryIds: { type: 'string', example: '1,2,3', description: 'Comma-separated category IDs' },
+        countryIds: { type: 'string', example: 'uuid1,uuid2', description: 'Comma-separated country UUIDs' },
+        cuisineIds: { type: 'string', example: '1,2,3', description: 'Comma-separated cuisine IDs' },
+        socialLink: { type: 'string', example: '{"facebook":"www.facebook.com/restaurant"}' }
+      }
+    }
+  })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateRestaurantDto: UpdateRestaurantDto,

@@ -43,6 +43,23 @@ export class CreateRestaurantDto {
   @ApiProperty({ example: 1, description: 'Rank of the restaurant', required: false })
   rank?: number;
 
+  @IsOptional()
+  @IsInt()
+  @Transform(({ value }) => value !== undefined ? parseInt(value, 10) : undefined)
+  @ApiProperty({ example: 2, description: 'Price range of the restaurant (1-5, where 1 is cheapest and 5 is most expensive)', required: false })
+  priceRange?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @ApiProperty({ example: true, description: 'Whether the restaurant has a promotion', required: false })
+  isPromotion?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Transform(({ value }) => value !== undefined ? parseInt(value, 10) : undefined)
+  @ApiProperty({ example: 15, description: 'Promotion rate as a percentage (e.g., 15 for 15% off)', required: false })
+  promoRate?: number;
+
   @ApiProperty({ example: [1, 2, 3], description: 'Array of category IDs associated with the restaurant' })
   @IsArray()
   @IsOptional()
