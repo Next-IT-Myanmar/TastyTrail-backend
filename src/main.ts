@@ -38,7 +38,7 @@ async function bootstrap() {
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('Tasty Trail - API Documentation')    
-      .setDescription('The MM Tasty -> prepared by NIM.')
+      .setDescription('The MM Tasty -> prepared by Next IT Myanmar.')
       .setVersion('1.0')
       .addBearerAuth()
       .addTag('Cuisines', 'Cuisine management endpoints')
