@@ -27,7 +27,10 @@
     "start": "node dist/main",
     "start:dev": "nest start --watch",
     "test": "jest",
-    "postinstall": "npm run build"
+    "postinstall": "npm run build",
+    "typeorm": "typeorm",
+    "typeorm:migration:generate": "typeorm migration:generate",
+    "typeorm:migration:run": "typeorm migration:run"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
