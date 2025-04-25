@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDate } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateRoleDto {
@@ -11,4 +11,14 @@ export class CreateRoleDto {
   @IsString()
   @IsOptional()
   desc?: string;
+
+  @ApiProperty({ description: 'Creation timestamp of the role', required: false })
+  @IsOptional()
+  @IsDate()
+  createdAt?: Date;
+
+  @ApiProperty({ description: 'Last update timestamp of the role', required: false })
+  @IsOptional()
+  @IsDate()
+  updatedAt?: Date;
 }

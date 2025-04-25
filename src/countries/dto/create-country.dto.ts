@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDate } from 'class-validator';
 
 export class CreateCountryDto {
   @ApiProperty({ example: 'United States', description: 'Name of the country' })
@@ -19,4 +19,14 @@ export class CreateCountryDto {
     required: false
   })
   flag?: Express.Multer.File;
+
+  @ApiProperty({ description: 'Creation timestamp of the country', required: false })
+  @IsOptional()
+  @IsDate()
+  createdAt?: Date;
+
+  @ApiProperty({ description: 'Last update timestamp of the country', required: false })
+  @IsOptional()
+  @IsDate()
+  updatedAt?: Date;
 }
