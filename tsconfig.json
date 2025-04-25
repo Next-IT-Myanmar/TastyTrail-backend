@@ -7,8 +7,6 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2021",
-    "lib": ["ES2021"],              
-    "types": ["node"],              
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
@@ -20,4 +18,4 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
   }
-}
+} 
