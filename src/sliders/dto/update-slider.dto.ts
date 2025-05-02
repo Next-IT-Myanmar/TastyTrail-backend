@@ -17,8 +17,5 @@ export class UpdateSliderDto extends PartialType(CreateSliderDto) {
   @ApiProperty({ type: 'string', format: 'binary', required: false })
   image?: Express.Multer.File;
 
-  @ApiProperty({ description: 'Creation timestamp of the slider', required: false })
-  @IsOptional()
-  @IsDate()
-  createdAt?: Date;
+  // Timestamps are handled automatically by the database
 }

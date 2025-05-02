@@ -15,13 +15,5 @@ export class CreateSliderDto {
   @ApiProperty({ type: 'string', format: 'binary' })
   image: Express.Multer.File;
 
-  @ApiProperty({ description: 'Creation timestamp of the slider', required: false })
-  @IsOptional()
-  @IsDate()
-  createdAt?: Date;
-
-  @ApiProperty({ description: 'Last update timestamp of the slider', required: false })
-  @IsOptional()
-  @IsDate()
-  updatedAt?: Date;
+  // Timestamps are handled automatically by the database
 }

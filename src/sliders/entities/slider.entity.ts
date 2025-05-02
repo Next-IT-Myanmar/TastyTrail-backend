@@ -1,5 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { ApiProperty } from '@nestjs/swagger';
+import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 @Entity('sliders')
 export class Slider {
@@ -19,11 +19,11 @@ export class Slider {
   @Column()
   image: string;
 
-  @ApiProperty()
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @ApiPropertyOptional({ description: 'Creation timestamp of the slider' })
+  @CreateDateColumn()
   createdAt: Date;
 
-  @ApiProperty()
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  @ApiPropertyOptional({ description: 'Last update timestamp of the slider' })
+  @UpdateDateColumn()
   updatedAt: Date;
 }
