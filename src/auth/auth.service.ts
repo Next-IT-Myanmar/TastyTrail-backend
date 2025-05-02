@@ -23,11 +23,11 @@ export class AuthService {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         { userId },
-        { expiresIn: '5m' } // 5 minutes
+        { expiresIn: '1h' } // 5 minutes
       ),
       this.jwtService.signAsync(
         { userId },
-        { expiresIn: '1h' } // 1 hour
+        { expiresIn: '24h' } // 1 hour
       ),
     ]);
 
