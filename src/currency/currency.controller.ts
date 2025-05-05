@@ -1,5 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiConsumes ,ApiBody } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import * as fs from 'fs';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrencyService } from './currency.service';
 import { CreateCurrencyDto } from './dto/create-currency.dto';
@@ -14,10 +18,59 @@ export class CurrencyController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a new currency rate' })
+  @ApiOperation({
+    summary: 'Create a new currency rate',
+    description: 'Creates a new currency with optional image upload. The image field should be sent as a file.'})
+  @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 201, description: 'The currency has been successfully created.', type: Currency })
-  create(@Body() createCurrencyDto: CreateCurrencyDto) {
-    return this.currencyService.create(createCurrencyDto);
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        buy: { type: 'number', example: 1.25, minimum: 0 },
+        buyStatus: { type: 'boolean', example: true },
+        sell: { type: 'number', example: 1.35, minimum: 0 },
+        sellStatus: { type: 'boolean', example: true },
+        code: { type: 'string', example: 'USD' },
+        img: {
+          type: 'string',
+          format: 'binary',
+          description: 'Currency image file (jpg, jpeg, png, or gif)',
+        },
+      },
+      required: ['buy', 'buyStatus', 'sell', 'sellStatus'],
+    },
+  })
+  @UseInterceptors(FileInterceptor('img', {
+    storage: diskStorage({
+      destination: (req, file, cb) => {
+        const uploadDir = './uploads/currency';
+        // Create directory if it doesn't exist
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+      },
+      filename: (req, file, cb) => {
+        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+      },
+    }),
+    fileFilter: (req, file, cb) => {
+      if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+        return cb(new Error('Only image files are allowed!'), false);
+      }
+      cb(null, true);
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+  }))
+  create(
+    @Body() createCurrencyDto: CreateCurrencyDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.currencyService.create(createCurrencyDto, file);
   }
 
   @Get()
@@ -43,11 +96,61 @@ export class CurrencyController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update a currency rate' })
+  @ApiOperation({ 
+    summary: 'Update a currency rate',
+    description: 'Updates a currency with optional image upload. The img field should be sent as a file. The code field can be updated as text.'
+  })
+  @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: 'The currency has been successfully updated.', type: Currency })
   @ApiResponse({ status: 404, description: 'Currency rate not found.' })
-  update(@Param('id') id: string, @Body() updateCurrencyDto: UpdateCurrencyDto) {
-    return this.currencyService.update(+id, updateCurrencyDto);
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        buy: { type: 'number', example: 1.25, minimum: 0 },
+        buyStatus: { type: 'boolean', example: true },
+        sell: { type: 'number', example: 1.35, minimum: 0 },
+        sellStatus: { type: 'boolean', example: true },
+        code: { type: 'string', example: 'USD' },
+        img: {
+          type: 'string',
+          format: 'binary',
+          description: 'Currency image file (jpg, jpeg, png, or gif)',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('img', {
+    storage: diskStorage({
+      destination: (req, file, cb) => {
+        const uploadDir = './uploads/currency';
+        // Create directory if it doesn't exist
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+      },
+      filename: (req, file, cb) => {
+        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+      },
+    }),
+    fileFilter: (req, file, cb) => {
+      if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+        return cb(new Error('Only image files are allowed!'), false);
+      }
+      cb(null, true);
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+  }))
+  update(
+    @Param('id') id: string, 
+    @Body() updateCurrencyDto: UpdateCurrencyDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.currencyService.update(+id, updateCurrencyDto, file);
   }
 
   @Delete(':id')

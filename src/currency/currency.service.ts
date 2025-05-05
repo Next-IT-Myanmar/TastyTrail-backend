@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Currency } from './entities/currency.entity';
 import { CreateCurrencyDto } from './dto/create-currency.dto';
 import { UpdateCurrencyDto } from './dto/update-currency.dto';
@@ -12,8 +14,14 @@ export class CurrencyService {
     private currencyRepository: Repository<Currency>,
   ) {}
 
-  create(createCurrencyDto: CreateCurrencyDto) {
-    const currency = this.currencyRepository.create(createCurrencyDto);
+  create(createCurrencyDto: CreateCurrencyDto, file?: Express.Multer.File) {
+const currency = this.currencyRepository.create(createCurrencyDto);
+    
+    if (file) {
+      // Set the image path in the database
+      currency.img = `uploads/currency/${file.filename}`;
+    }
+    
     return this.currencyRepository.save(currency);
   }
 
@@ -40,14 +48,49 @@ export class CurrencyService {
     return currency;
   }
 
-  async update(id: number, updateCurrencyDto: UpdateCurrencyDto) {
+  async update(id: number, updateCurrencyDto: UpdateCurrencyDto, file?: Express.Multer.File) {
     const currency = await this.findOne(id);
+    
+    // If a new image is uploaded, delete the old one and update the path
+    if (file) {
+      if (currency.img) {
+        const oldImagePath = path.join(process.cwd(), currency.img);
+        try {
+          if (fs.existsSync(oldImagePath)) {
+            fs.unlinkSync(oldImagePath);
+          }
+        } catch (error) {
+          // Ignore error if file doesn't exist or can't be deleted
+          console.error(`Error deleting old image: ${error.message}`);
+        }
+      }
+      
+      // Set the new image path
+      currency.img = `uploads/currency/${file.filename}`;
+    }
+    
+    // Update other fields
     Object.assign(currency, updateCurrencyDto);
+    
     return this.currencyRepository.save(currency);
   }
 
   async remove(id: number) {
     const currency = await this.findOne(id);
+    
+    // Delete image file if exists
+    if (currency.img) {
+      const imagePath = path.join(process.cwd(), currency.img);
+      try {
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+      } catch (error) {
+        // Ignore error if file doesn't exist or can't be deleted
+        console.error(`Error deleting image: ${error.message}`);
+      }
+    }
+    
     return this.currencyRepository.remove(currency);
   }
 }
