@@ -8,6 +8,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrencyService } from './currency.service';
 import { CreateCurrencyDto } from './dto/create-currency.dto';
 import { UpdateCurrencyDto } from './dto/update-currency.dto';
+import { SearchCurrencyDto } from './dto/search-currency.dto';
 import { Currency } from './entities/currency.entity';
 
 @ApiTags('currency')
@@ -83,6 +84,13 @@ export class CurrencyController {
     @Query('limit') limit?: number,
   ) {
     return this.currencyService.findAll(page, limit);
+  }
+
+  @Get('search')
+  @ApiOperation({ summary: 'Search currency rates by code' })
+  @ApiResponse({ status: 200, description: 'Return currency rates matching the search criteria.', type: [Currency] })
+  search(@Query() searchDto: SearchCurrencyDto) {
+    return this.currencyService.search(searchDto.keyword, searchDto.page, searchDto.limit);
   }
 
   @Get(':id')

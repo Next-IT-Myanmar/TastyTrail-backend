@@ -42,6 +42,7 @@ async function bootstrap() {
       .setVersion('1.0')
       .addBearerAuth()
       .addTag('Cuisines', 'Cuisine management endpoints')
+      .addTag('currency', 'Currency rate management endpoints')
       .build();
     
     const document = SwaggerModule.createDocument(app, config);

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Currency } from './entities/currency.entity';
@@ -92,5 +92,25 @@ const currency = this.currencyRepository.create(createCurrencyDto);
     }
     
     return this.currencyRepository.remove(currency);
+  }
+
+  async search(keyword?: string, page: number = 1, limit: number = 10) {
+    // Search for currencies where code contains the keyword (case insensitive) if provided
+    // Otherwise, return all currencies with pagination
+    const whereCondition = keyword ? { code: ILike(`%${keyword}%`) } : {};
+    
+    const [items, total] = await this.currencyRepository.findAndCount({
+      where: whereCondition,
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { id: 'DESC' },
+    });
+
+    return {
+      items,
+      total,
+      page,
+      lastPage: Math.ceil(total / limit),
+    };
   }
 }
