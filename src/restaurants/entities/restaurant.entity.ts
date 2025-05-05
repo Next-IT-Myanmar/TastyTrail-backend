@@ -34,6 +34,14 @@ export class Restaurant {
   @Column()
   address: string;
 
+  @ApiProperty({
+    example: ['+1234567890', '+0987654321'],
+    description: 'Phone numbers of the restaurant',
+    type: [String],
+  })
+  @Column('simple-array', { nullable: true })
+  phones: string[];
+
   @ApiProperty({ example: '09:00', description: 'Opening hour of the restaurant' })
   @Column('time')
   openHour: string;

@@ -31,6 +31,20 @@ export class CreateRestaurantDto {
   @IsNotEmpty()
   address: string;
 
+  @ApiProperty({ 
+    example: ['+1234567890', '+0987654321'], 
+    description: 'Phone numbers of the restaurant',
+    type: [String],
+    isArray: true
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  @Transform(({ value }) => 
+    typeof value === 'string' ? value.split(',').map(phone => phone.trim()) : value
+  )
+  phones: string[];
+
   @ApiProperty({ example: '09:00' })
   @IsString()
   @IsNotEmpty()

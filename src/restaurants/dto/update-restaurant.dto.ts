@@ -1,10 +1,24 @@
 import { PartialType } from '@nestjs/swagger';
 import { CreateRestaurantDto } from './create-restaurant.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsOptional, IsInt } from 'class-validator';
+import { IsArray, IsOptional, IsInt, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class UpdateRestaurantDto extends PartialType(CreateRestaurantDto) {
+  @ApiProperty({ 
+    example: ['+1234567890', '+0987654321'], 
+    description: 'Phone numbers of the restaurant',
+    type: [String],
+    isArray: true,
+    required: false
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  @Transform(({ value }) => 
+    typeof value === 'string' ? value.split(',').map(phone => phone.trim()) : value
+  )
+  phones?: string[];
   @ApiProperty({
     example: [1, 2, 3],
     description: 'Array of cuisine IDs to update',

@@ -97,9 +97,6 @@ export class RestaurantsService {
       ...createRestaurantDto,
       img: filePath,
       otherPhoto: otherPhotoFilePaths,
-      categories,
-      countries,
-      cuisines,
     });
   
     return this.restaurantRepository.save(restaurant);
