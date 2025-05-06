@@ -13,30 +13,31 @@ export class CurrencyService {
     @InjectRepository(Currency)
     private currencyRepository: Repository<Currency>,
   ) {}
-
   create(createCurrencyDto: CreateCurrencyDto, file?: Express.Multer.File) {
 const currency = this.currencyRepository.create(createCurrencyDto);
     
     if (file) {
       // Set the image path in the database
       currency.img = `uploads/currency/${file.filename}`;
-    }
-    
+    }  
     return this.currencyRepository.save(currency);
   }
 
   async findAll(page: number = 1, limit: number = 10) {
-    const [items, total] = await this.currencyRepository.findAndCount({
+    const [results, total] = await this.currencyRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
-      order: { id: 'DESC' },
+      order: { updatedAt: 'DESC' },
     });
 
     return {
-      items,
-      total,
-      page,
-      lastPage: Math.ceil(total / limit),
+      results,
+      pagination: {
+        total,
+        page,
+        limit,
+        lastPage: Math.ceil(total / limit)
+      }
     };
   }
 
@@ -49,8 +50,7 @@ const currency = this.currencyRepository.create(createCurrencyDto);
   }
 
   async update(id: number, updateCurrencyDto: UpdateCurrencyDto, file?: Express.Multer.File) {
-    const currency = await this.findOne(id);
-    
+    const currency = await this.findOne(id);  
     // If a new image is uploaded, delete the old one and update the path
     if (file) {
       if (currency.img) {
@@ -63,21 +63,18 @@ const currency = this.currencyRepository.create(createCurrencyDto);
           // Ignore error if file doesn't exist or can't be deleted
           console.error(`Error deleting old image: ${error.message}`);
         }
-      }
-      
+      }  
       // Set the new image path
       currency.img = `uploads/currency/${file.filename}`;
     }
-    
+  
     // Update other fields
-    Object.assign(currency, updateCurrencyDto);
-    
+    Object.assign(currency, updateCurrencyDto);   
     return this.currencyRepository.save(currency);
   }
 
   async remove(id: number) {
-    const currency = await this.findOne(id);
-    
+    const currency = await this.findOne(id); 
     // Delete image file if exists
     if (currency.img) {
       const imagePath = path.join(process.cwd(), currency.img);
@@ -90,27 +87,26 @@ const currency = this.currencyRepository.create(createCurrencyDto);
         console.error(`Error deleting image: ${error.message}`);
       }
     }
-    
     return this.currencyRepository.remove(currency);
   }
-
   async search(keyword?: string, page: number = 1, limit: number = 10) {
     // Search for currencies where code contains the keyword (case insensitive) if provided
     // Otherwise, return all currencies with pagination
     const whereCondition = keyword ? { code: ILike(`%${keyword}%`) } : {};
-    
-    const [items, total] = await this.currencyRepository.findAndCount({
+    const [results, total] = await this.currencyRepository.findAndCount({
       where: whereCondition,
       skip: (page - 1) * limit,
       take: limit,
-      order: { id: 'DESC' },
+      order: { updatedAt: 'DESC' },
     });
-
     return {
-      items,
-      total,
-      page,
-      lastPage: Math.ceil(total / limit),
+      results,
+      pagination: {
+        total,
+        page,
+        limit,
+        lastPage: Math.ceil(total / limit)
+      }
     };
   }
 }

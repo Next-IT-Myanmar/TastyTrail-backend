@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity()
@@ -9,6 +9,13 @@ export class Currency {
   })
   @PrimaryGeneratedColumn()
   id: number;
+  
+  @ApiProperty({
+    description: 'The date when the currency was last updated',
+    example: '2024-01-20T15:30:00Z'
+  })
+  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  updatedAt: Date;
 
   @ApiProperty({
     description: 'The buy rate of the currency',
@@ -51,4 +58,11 @@ export class Currency {
   })
   @Column({ nullable: true })
   img: string;
+
+  @ApiProperty({
+    description: 'The date when the currency was created',
+    example: '2024-01-20T10:00:00Z'
+  })
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
 }
