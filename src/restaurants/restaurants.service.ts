@@ -97,9 +97,27 @@ export class RestaurantsService {
       ...createRestaurantDto,
       img: filePath,
       otherPhoto: otherPhotoFilePaths,
+      categories,
+      countries,
+      cuisines
     });
   
-    return this.restaurantRepository.save(restaurant);
+    // Save the restaurant and return it with relations loaded
+    const savedRestaurant = await this.restaurantRepository.save(restaurant);
+    
+    // Get the restaurant with relations loaded
+    const restaurantWithRelations = await this.restaurantRepository.findOne({
+      where: { id: savedRestaurant.id },
+      relations: ['categories', 'countries', 'cuisines']
+    });
+
+    // Add the IDs to the response
+    return {
+      ...restaurantWithRelations,
+      categoryIds: categoryIds || [],
+      countryIds: countryIds || [],
+      cuisineIds: cuisineIds || []
+    };
   }
   
   
