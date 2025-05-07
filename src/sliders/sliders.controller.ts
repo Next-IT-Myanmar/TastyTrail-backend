@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseIntPipe, Query } from '@nestjs/common';
 import { SlidersService } from './sliders.service';
 import { CreateSliderDto } from './dto/create-slider.dto';
 import { UpdateSliderDto } from './dto/update-slider.dto';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { SearchSliderDto } from './dto/search-slider.dto';
+import { Slider } from './entities/slider.entity';
+import { ApiBearerAuth, ApiConsumes, ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -36,8 +38,22 @@ export class SlidersController {
   }
 
   @Get()
-  findAll() {
-    return this.slidersService.findAll();
+  @ApiOperation({ summary: 'Get all sliders with pagination' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Return all sliders.', type: [Slider] })
+  findAll(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.slidersService.findAll(page, limit);
+  }
+
+  @Get('search')
+  @ApiOperation({ summary: 'Search sliders by title' })
+  @ApiResponse({ status: 200, description: 'Return sliders matching the search criteria.', type: [Slider] })
+  search(@Query() searchDto: SearchSliderDto) {
+    return this.slidersService.search(searchDto.keyword, searchDto.page, searchDto.limit);
   }
 
   @Get(':id')

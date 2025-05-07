@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { CreateSliderDto } from './dto/create-slider.dto';
 import { UpdateSliderDto } from './dto/update-slider.dto';
 import { Slider } from './entities/slider.entity';
@@ -22,8 +22,22 @@ export class SlidersService {
     return this.sliderRepository.save(slider);
   }
 
-  findAll() {
-    return this.sliderRepository.find();
+  async findAll(page: number = 1, limit: number = 10) {
+    const [results, total] = await this.sliderRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { id: 'DESC' },
+    });
+
+    return {
+      results,
+      pagination: {
+        total,
+        page,
+        limit,
+        lastPage: Math.ceil(total / limit)
+      }
+    };
   }
 
   async findOne(id: number) {
@@ -64,5 +78,26 @@ export class SlidersService {
     }
 
     return this.sliderRepository.remove(slider);
+  }
+
+  async search(keyword?: string, page: number = 1, limit: number = 10) {
+    // Search for sliders where title contains the keyword (case insensitive) if provided
+    // Otherwise, return all sliders with pagination
+    const whereCondition = keyword ? { title: ILike(`%${keyword}%`) } : {};
+    const [results, total] = await this.sliderRepository.findAndCount({
+      where: whereCondition,
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { id: 'DESC' },
+    });
+    return {
+      results,
+      pagination: {
+        total,
+        page,
+        limit,
+        lastPage: Math.ceil(total / limit)
+      }
+    };
   }
 }
