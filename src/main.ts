@@ -17,9 +17,12 @@ async function bootstrap() {
 
   // Enable CORS with environment-specific options
   app.enableCors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: [
+      process.env.FRONTEND_URL,
+      'http://localhost:5173',
+    ].filter(Boolean), // Removes undefined/null if FRONTEND_URL isn't set
     credentials: true,
-    methods: ['GET', 'POST','PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   });
 
   app.useGlobalPipes(
