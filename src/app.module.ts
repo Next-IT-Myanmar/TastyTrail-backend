@@ -11,6 +11,7 @@ import { RestaurantsModule } from './restaurants/restaurants.module';
 import { SlidersModule } from './sliders/sliders.module';
 import { CurrencyModule } from './currency/currency.module';
 import { CuisinesModule } from './cuisines/cuisines.module';
+import { NewsletterModule } from './newsletter/newsletter.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { CuisinesModule } from './cuisines/cuisines.module';
     UsersModule,
     CategoriesModule,
     RestaurantsModule,
+    NewsletterModule,
     SlidersModule,
     CurrencyModule,
     CuisinesModule,
