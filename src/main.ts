@@ -8,7 +8,9 @@ import { join } from 'path';
 import 'reflect-metadata';
 
 async function bootstrap() {
+  
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.setGlobalPrefix('api');
 
   // Serve static files from uploads directory
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
